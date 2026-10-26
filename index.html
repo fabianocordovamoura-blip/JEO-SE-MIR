@@ -31,7 +31,7 @@ th{position:sticky;top:0;background:var(--hd);color:#fff;text-align:left;padding
 @media(max-width:900px){.detail-layout{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-layout>.info-row-2{display:contents}.detail-layout>.detail-ppa{grid-column:1 / -1;grid-row:auto}.detail-layout>.finance-card{grid-column:auto!important;grid-row:auto!important}}
 @media(max-width:700px){.dg.info-row-1{grid-template-columns:repeat(2,minmax(0,1fr))}.dg.info-row-2{grid-template-columns:repeat(2,minmax(0,1fr))}.g2,.top{grid-template-columns:1fr}.g3{grid-template-columns:1fr}}
 </style></head><body>
-<header><div><h1>Ministério da Igualdade Racial — MIR</h1><small>Relatório de Execução Orçamentária · Exercício 2026</small></div><div style="text-align:right"><label class="up">📂 Carregar planilha<input type="file" id="fx" accept=".xlsx,.xlsm" hidden></label><br><small id="upd"></small><br><small id="msg"></small></div></header>
+<header><div><h1>Ministério da Igualdade Racial — MIR</h1><small>Relatório de Execução Orçamentária · Exercício 2026</small></div><div style="text-align:right"><small id="upd"></small><br><small id="msg"></small></div></header>
 <div class="w">
 <div class="top"><div class="card"><h3>DOTAÇÃO</h3><div class="g3" id="kd"></div><h3 style="margin-top:14px">EXECUTADO</h3><div class="g3" id="ke" style="margin-top:10px"></div><h3 style="margin-top:14px">CONTROLE DE EMPENHO</h3><div class="g3" id="kx1" style="margin-top:10px"></div><div class="g3" id="kx2" style="margin-top:10px"></div></div>
 <div class="card gw"><h3>Limite de movimentação e empenho (LME)</h3><div id="gl"></div><div class="g3" id="kl"></div></div></div>
@@ -96,7 +96,6 @@ const ok=Object.keys(h).find(k=>k.startsWith('OBSERVAÇÃO'));
 ini.push({u,acao:s.split(' ')[0],po:ss(g('PO')),name:name||'(sem descrição) — '+(ss(g('PARCEIRO'))||ss(g('DIRETORIA'))||'—'),sei:ss(g('SEI')),dir:ss(g('DIRETORIA')),resp:ss(g('RESPONSÁVEL')),inst:ss(g('INSTRUMENTO')),siafi:ss(g('SIAFI')),parc:ss(g('PARCEIRO')),ano:ss(g('ANO DE')),prog,emp,liq:nn(g('LIQUIDADO')),pago:nn(g('PAGO')),st:ss(g('STATUS'))||'—',prev:ss(g('PREVISÃO')),obs:ok?ss(r[h[ok]]):'',ppa:ss(g('ENTREGA'))})})});
 return{tot,lme:{limite:nn(l[0]),aguard:nn(l[1]),emp:nn(l[2]),saldo:nn(l[6])},upd:ss((c.find(r=>/^Atualiza/i.test(ss(r[11])))||[])[11]),units,ini}}
 
-$('fx').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{D=parseWB(XLSX.read(await f.arrayBuffer(),{type:'array'}));init();const agora=new Date();const dataHora=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(agora);$('upd').textContent='Planilha carregada em: '+dataHora; $('msg').textContent='✔ '+f.name+' ('+D.ini.length+' iniciativas)'}catch(x){$('msg').textContent='⚠ '+x.message}e.target.value=''};
 init();
 
 fetch('./dados.json?v=' + Date.now(), {cache:'no-store'})
