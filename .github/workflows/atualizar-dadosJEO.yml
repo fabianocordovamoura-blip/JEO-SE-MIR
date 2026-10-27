@@ -1,0 +1,36 @@
+name: Atualizar Dados JEO 2026
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar-dados:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar arquivos do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar biblioteca Excel
+        run: pip install openpyxl
+
+      - name: Converter Excel para JSON
+        run: python converter_jeo.py
+
+      - name: Publicar dados atualizados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Atualização automática dos dados JEO 2026"
+            git push
+          fi
