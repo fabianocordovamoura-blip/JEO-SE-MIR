@@ -1,4 +1,4 @@
-    ini = []
+       ini = []
     for sheet_name, u in sheets:
         if sheet_name not in wb.sheetnames:
             continue
@@ -46,6 +46,8 @@ if __name__ == "__main__":
     origem = Path(__file__).resolve().parent
     resultado = converter(origem / ARQUIVO_EXCEL)
     destino = origem / ARQUIVO_JSON
+    if not resultado["ini"] or len(resultado["units"]) != 6:
+        raise ValueError("Conversão incompleta: dados.json não será substituído")
     destino.write_text(json.dumps(resultado, ensure_ascii=False, indent=2, default=str) + "\n",
                        encoding="utf-8")
     print(f"Gerado {destino.name}: {len(resultado['ini'])} iniciativas; "
