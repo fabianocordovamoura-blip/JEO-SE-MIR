@@ -1,4 +1,101 @@
-           if 'LIMITE DE MOVIMENTAÇÃO EMPENHO' in wb.sheetnames:
+
+"""Converte a planilha JEO 2026 em dados.json para o painel GitHub Pages."""
+import json
+import re
+from pathlib import Path
+from datetime import date, datetime
+from openpyxl import load_workbook
+
+ARQUIVO_JSON = 'dados.json'
+ABAS_INICIATIVAS = {
+    '2000 - SE': 'SE', '216H - SE': 'SE', '4641- SE': 'SE',
+    '21FC - SENAPIR': 'SENAPIR', '21FE - SQPT': 'SQPT',
+    '21FF - SEPAR': 'SEPAR', '21HN - SEPAR': 'SEPAR',
+    '21FG - CNPIR': 'CNPIR', '21HN - OUV': 'OUV',
+}
+UNIDADES = ('SEPAR', 'OUV', 'SENAPIR', 'SQPT', 'CNPIR', 'SE')
+
+
+def ss(value):
+    if value is None:
+        return ''
+    if isinstance(value, (date, datetime)):
+        return value.strftime('%d/%m/%Y')
+    return str(value).strip()
+
+
+def nn(value):
+    if value is None or isinstance(value, bool):
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    value = ss(value).replace('R$', '').replace(' ', '')
+    if not value or value.startswith('#') or value in ('-', '—'):
+        return 0.0
+    if ',' in value:
+        value = value.replace('.', '').replace(',', '.')
+    try:
+        return float(value)
+    except ValueError:
+        return 0.0
+
+
+def at(row, index):
+    return row[index] if 0 <= index < len(row) else None
+
+
+def cabecalhos(row):
+    return {re.sub(r'\s+', ' ', ss(v)).upper(): i
+            for i, v in enumerate(row) if ss(v)}
+
+
+def pegar(row, header, prefix):
+    for title, index in header.items():
+        if title.startswith(prefix):
+            return at(row, index)
+    return None
+
+
+def localizar_excel(folder):
+    candidates = sorted(folder.glob('*.xlsx'))
+    valid = [p for p in candidates
+             if not p.name.startswith('~$') and 'JEO' in p.name.upper()]
+    if len(valid) == 1:
+        return valid[0]
+    if not valid:
+        raise FileNotFoundError(
+            'Nenhuma planilha Excel JEO (.xlsx) encontrada no repositório.')
+    raise ValueError('Há mais de uma planilha JEO no repositório: ' +
+                     ', '.join(p.name for p in valid))
+
+
+def converter(caminho):
+    wb = load_workbook(caminho, data_only=True, read_only=True)
+    try:
+        if 'Consolidado 2026' not in wb.sheetnames:
+            raise ValueError('Aba Consolidado 2026 não encontrada.')
+
+        consolidado = list(wb['Consolidado 2026'].values)
+        total_row = next(
+            (r for r in consolidado
+             if ss(at(r, 0)).upper() == 'TOTAL GERAL'), None)
+        if total_row is None:
+            raise ValueError('Linha TOTAL GERAL não encontrada no Consolidado 2026.')
+
+        labels = ('ploa', 'loa', 'dot', 'bloq', 'bloq_sof', 'livre',
+                  'prog', 'desc', 'aguard', 'emp', 'liq', 'pago',
+                  'saldo', 'pct_prog', 'pct_emp', 'pct_liq', 'pct_pago')
+        columns = (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                   14, 15, 16, 17, 18)
+        tot = {key: nn(at(total_row, col))
+               for key, col in zip(labels, columns)}
+        tot.update({
+            'programado': tot['prog'],
+            'empenhado': tot['emp'],
+            'liquidado': tot['liq']
+        })
+
+        if 'LIMITE DE MOVIMENTAÇÃO EMPENHO' in wb.sheetnames:
             lme_sheet = wb['LIMITE DE MOVIMENTAÇÃO EMPENHO']
             lme_values = next(
                 lme_sheet.iter_rows(min_row=2, max_row=2, values_only=True),
