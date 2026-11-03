@@ -1,4 +1,4 @@
-    """Converte a planilha JEO 2026 em dados.json para o painel GitHub Pages."""
+"""Converte a planilha JEO 2026 em dados.json para o painel GitHub Pages."""
 import json
 import re
 from pathlib import Path
@@ -126,3 +126,16 @@ def converter(caminho):
 
 if __name__ == '__main__':
     origem = Path(__file__).resolve().parent
+        resultado = converter(localizar_excel(origem))
+    destino = origem / ARQUIVO_JSON
+
+    if len(resultado['units']) != 6:
+        raise ValueError('Conversão incompleta: unidades não identificadas.')
+
+    destino.write_text(
+        json.dumps(resultado, ensure_ascii=False, indent=2, default=str) + '\n',
+        encoding='utf-8'
+    )
+
+    print(f"Gerado {destino.name}: {len(resultado['ini'])} iniciativas; "
+          f"{len(resultado['units'])} unidades; atualização: {resultado['upd']}")
