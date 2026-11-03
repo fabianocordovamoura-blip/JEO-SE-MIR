@@ -1,4 +1,3 @@
-
 """Converte a planilha JEO 2026 em dados.json para o painel GitHub Pages."""
 import json
 import re
